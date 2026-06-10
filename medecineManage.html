@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>智慧药房 · 药品目录管理系统</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #f0f4f9;
+            font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+            padding: 32px 24px;
+            color: #1a2c3e;
+        }
+
+        /* 主容器 */
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        /* 头部 */
+        .header {
+            margin-bottom: 28px;
+        }
+
+        .header h1 {
+            font-size: 1.9rem;
+            font-weight: 600;
+            background: linear-gradient(135deg, #1f4870, #2a6f8f);
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+            letter-spacing: -0.3px;
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .sub {
+            color: #5c6f87;
+            margin-top: 8px;
+            font-size: 0.9rem;
+            border-left: 3px solid #80b6d4;
+            padding-left: 14px;
+        }
+
+        /* 筛选卡片 */
+        .filter-card {
+            background: white;
+            border-radius: 28px;
+            box-shadow: 0 6px 14px rgba(0, 0, 0, 0.02), 0 2px 6px rgba(0, 0, 0, 0.05);
+            padding: 20px 28px;
+            margin-bottom: 28px;
+            transition: all 0.2s;
+            border: 1px solid #e9eef3;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            align-items: flex-end;
+        }
+
+        .filter-item {
+            flex: 1;
+            min-width: 170px;
+        }
+
+        .filter-item label {
+            display: block;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #4a6a85;
+            margin-bottom: 6px;
+        }
+
+        .filter-item select, .filter-item input {
+            width: 100%;
+            padding: 10px 14px;
+            font-size: 0.9rem;
+            border: 1px solid #cfdfed;
+            border-radius: 20px;
+            background: #ffffff;
+            outline: none;
+            transition: 0.2s;
+            font-family: inherit;
+            color: #1e3a5f;
+        }
+
+        .filter-item select:focus, .filter-item input:focus {
+            border-color: #3c8dbc;
+            box-shadow: 0 0 0 3px rgba(60, 141, 188, 0.1);
+        }
+
+        .search-wrapper {
+            position: relative;
+        }
+
+        .reset-btn {
+            background: #eef2f8;
+            border: none;
+            padding: 10px 24px;
+            border-radius: 40px;
+            font-weight: 500;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: 0.2s;
+            color: #2c6280;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 6px;
+        }
+
+        .reset-btn:hover {
+            background: #e2e9f1;
+            transform: translateY(-1px);
+        }
+
+        .stats-badge {
+            background: #e9f0f7;
+            padding: 6px 14px;
+            border-radius: 40px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            color: #1f5e83;
+            margin-left: auto;
+            white-space: nowrap;
+        }
+
+        /* 表格区域 */
+        .table-wrapper {
+            background: white;
+            border-radius: 28px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.03);
+            overflow-x: auto;
+            border: 1px solid #eef2f8;
+        }
+
+        .drug-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.85rem;
+            min-width: 600px;
+        }
+
+        .drug-table th {
+            text-align: left;
+            padding: 18px 20px;
+            background-color: #fafdff;
+            font-weight: 600;
+            color: #2c5a7a;
+            border-bottom: 2px solid #e2ebf3;
+            font-size: 0.85rem;
+        }
+
+        .drug-table td {
+            padding: 14px 20px;
+            border-bottom: 1px solid #f0f4fc;
+            color: #1f3b4f;
+            vertical-align: middle;
+        }
+
+        .drug-table tr:hover td {
+            background-color: #f9fbfe;
+        }
+
+        .cab-badge {
+            background: #eef3fc;
+            padding: 4px 10px;
+            border-radius: 40px;
+            font-weight: 500;
+            font-size: 0.75rem;
+            display: inline-block;
+            color: #1e6a8c;
+        }
+
+        .layer-badge {
+            background: #f2f6fa;
+            padding: 4px 10px;
+            border-radius: 40px;
+            font-size: 0.75rem;
+            color: #4a627a;
+        }
+
+        .code-cell {
+            font-family: 'SF Mono', 'Fira Code', monospace;
+            font-weight: 500;
+            color: #1f6392;
+            letter-spacing: 0.2px;
+        }
+
+        .empty-row td {
+            text-align: center;
+            padding: 48px 20px;
+            color: #859dae;
+            font-style: italic;
+            background: #fefefe;
+        }
+
+        .footer-note {
+            margin-top: 24px;
+            text-align: center;
+            font-size: 0.75rem;
+            color: #7e91a5;
+        }
+
+        @media (max-width: 720px) {
+            body {
+                padding: 20px 16px;
+            }
+            .filter-group {
+                flex-direction: column;
+                gap: 14px;
+            }
+            .stats-badge {
+                margin-left: 0;
+                align-self: flex-start;
+                margin-top: 8px;
+            }
+            .drug-table th, .drug-table td {
+                padding: 12px 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1>💊 药品目录管理系统</h1>
+        <div class="sub">全院药柜档案 · 实时筛选查阅</div>
+    </div>
+
+    <div class="filter-card">
+        <div class="filter-group">
+            <div class="filter-item">
+                <label>🏥 选择药房</label>
+                <select id="cabFilterSelect">
+                    <option value="all">全部药柜</option>
+                    <option value="3号药柜">3号药柜</option>
+                    <option value="4号药柜">4号药柜</option>
+                </select>
+            </div>
+            <div class="filter-item">
+                <label>📚 选择层级</label>
+                <select id="layerFilterSelect">
+                    <option value="all">全部层级</option>
+                    <option value="第一层">第一层</option>
+                    <option value="第二层">第二层</option>
+                    <option value="第三层">第三层</option>
+                    <option value="第四层">第四层</option>
+                </select>
+            </div>
+            <div class="filter-item">
+                <label>🔍 模糊搜索 (编码 / 名称)</label>
+                <input type="text" id="searchInput" placeholder="输入药品编码或名称..." autocomplete="off">
+            </div>
+            <div class="filter-item" style="flex: 0 0 auto;">
+                <button class="reset-btn" id="resetFilterBtn">⟳ 重置筛选</button>
+            </div>
+            <div class="stats-badge" id="resultCount">共 0 条记录</div>
+        </div>
+    </div>
+
+    <div class="table-wrapper">
+        <table class="drug-table" id="drugTable">
+            <thead>
+                <tr>
+                    <th>药柜</th>
+                    <th>层级</th>
+                    <th>药品编码</th>
+                    <th>药品名称</th>
+                </tr>
+            </thead>
+            <tbody id="tableBody">
+                <!-- 动态渲染 -->
+                <tr class="empty-row"><td colspan="4">加载数据中...</td></tr>
+            </tbody>
+        </table>
+    </div>
+    <div class="footer-note">
+        📌 数据基于3号药柜 & 4号药柜完整目录 | 支持药柜、层级筛选 + 模糊搜索（不区分大小写）
+    </div>
+</div>
+
+<script>
+    // --------------------------------------------------------------
+    // 根据原对话提供的完整药品数据 (3号药柜 + 4号药柜)
+    // 构建扁平药品列表
+    // --------------------------------------------------------------
+    const RAW_CABINETS = {
+        "3号药柜": {
+            "第一层": [
+                { code: "030101", name: "替格瑞洛片" }, { code: "030102", name: "依折麦布片" }, { code: "030103", name: "硫酸氢氯吡格雷片(进口)" },
+                { code: "030104", name: "酒石酸美托洛尔片" }, { code: "030105", name: "培哚普利片丁胺片" }, { code: "030106", name: "瑞舒伐他汀钙片" },
+                { code: "030107", name: "匹伐他汀钙片" }, { code: "030108", name: "非诺贝特片" }, { code: "030109", name: "辛伐他汀片" },
+                { code: "030110", name: "厄贝沙坦片" }
+            ],
+            "第二层": [
+                { code: "030201", name: "厄贝沙坦氢氯噻嗪片" }, { code: "030202", name: "马来酸依那普利叶酸片" }, { code: "030203", name: "盐酸贝那普利片" },
+                { code: "030204", name: "沙库巴曲沙坦钠片(进口)" }, { code: "030205", name: "阿利沙坦酯片" }, { code: "030206", name: "苯磺酸氨氯地平片" },
+                { code: "030207", name: "利伐沙班片" }, { code: "030208", name: "丁苯酞软胶囊" }, { code: "030209", name: "琥珀酸美托洛尔缓释片" },
+                { code: "030210", name: "苯磺酸左氨氯地平片" }, { code: "030211", name: "奥美沙坦酯氢氯噻嗪片" }, { code: "030212", name: "氨氯地平贝那普利片(I)" },
+                { code: "030213", name: "阿托伐他汀钙片" }
+            ],
+            "第三层": [
+                { code: "030301", name: "吲哚布芬片" }, { code: "030302", name: "单硝酸异山梨酯缓释胶囊" }, { code: "030303", name: "盐酸普萘洛尔片" },
+                { code: "030304", name: "硝酸异山梨酯片" }, { code: "030305", name: "阿司匹林肠溶片" }, { code: "030306", name: "硝酸异山梨酯缓释片" },
+                { code: "030307", name: "阿司匹林肠溶片" }, { code: "030308", name: "氯沙坦钾片" }, { code: "030309", name: "富马酸比索洛尔片" },
+                { code: "030310", name: "酒石酸美托洛尔缓释片(II)" }, { code: "030311", name: "硝苯地平缓释片(I)" }, { code: "030312", name: "硝苯地平控释片" },
+                { code: "030313", name: "盐酸拉贝洛尔片" }, { code: "030314", name: "盐酸曲美他嗪片" }
+            ],
+            "第四层": [
+                { code: "030401", name: "硫酸氢氯吡格雷片" }, { code: "030402", name: "马来酸依那普利片" }, { code: "030403", name: "替米沙坦片" },
+                { code: "030404", name: "左乙拉西坦片" }, { code: "030405", name: "甲磺酸倍他司汀片" }, { code: "030406", name: "茚拉西坦分散片" },
+                { code: "030407", name: "尼莫地平片" }, { code: "030408", name: "托拉塞米片" }, { code: "030409", name: "艾地苯酮片" },
+                { code: "030410", name: "布美他尼片" }, { code: "030411", name: "盐酸地尔硫卓片" }, { code: "030412", name: "盐酸胺碘酮片" },
+                { code: "030413", name: "阿托伐他汀钙片" }
+            ]
+        },
+        "4号药柜": {
+            "第一层": [
+                { code: "040101", name: "盐酸阿比多尔片" }, { code: "040102", name: "联苯双酯滴丸" }, { code: "040103", name: "富马酸替诺福韦二吡呋酯片" },
+                { code: "040104", name: "艾司奥美拉唑镁肠溶胶囊" }, { code: "040105", name: "美沙拉秦肠溶片" }, { code: "040106", name: "磷酸奥司他韦胶囊" },
+                { code: "040107", name: "泮托拉唑钠肠溶片" }, { code: "040108", name: "磷酸奥司他韦颗粒" }, { code: "040109", name: "富马酸丙酚替诺福韦片" },
+                { code: "040110", name: "水飞蓟宾胶囊" }, { code: "040111", name: "艾米替诺福韦片" }, { code: "040112", name: "甘草酸二铵肠溶胶囊" },
+                { code: "040113", name: "恩替卡韦胶囊" }, { code: "040114", name: "泛昔洛韦片" }, { code: "040115", name: "阿德福韦酯片" }
+            ],
+            "第二层": [
+                { code: "040201", name: "磷酸铝凝胶" }, { code: "040202", name: "复方甘草酸苷片" }, { code: "040203", name: "左氧氟沙星片" },
+                { code: "040204", name: "阿莫西林胶囊" }, { code: "040205", name: "复方谷氨酰胺肠溶胶囊" }, { code: "040206", name: "富马酸伏诺拉生片(进口)" },
+                { code: "040207", name: "硫糖铝混悬凝胶" }, { code: "040208", name: "艾普拉唑肠溶片" }, { code: "040209", name: "盐酸伊托必利片" },
+                { code: "040210", name: "奥美拉唑肠溶胶囊" }, { code: "040211", name: "马来酸曲美布汀片" }, { code: "040212", name: "胶体果胶铋胶囊" },
+                { code: "040213", name: "酪酸梭菌活菌片" }
+            ],
+            "第三层": [
+                { code: "040301", name: "硫酸羟氯喹片" }, { code: "040302", name: "雷贝拉唑钠肠溶片" }, { code: "040303", name: "别嘌醇缓释胶囊" },
+                { code: "040304", name: "秋水仙碱片" }, { code: "040305", name: "阿法骨化醇软胶囊" }, { code: "040306", name: "非布司他片" },
+                { code: "040307", name: "草乌甲素片" }, { code: "040308", name: "碳酸氢钠片" }, { code: "040309", name: "利福平胶囊" },
+                { code: "040310", name: "利福喷丁胶囊" }, { code: "040311", name: "盐酸乙胺丁醇片" }, { code: "040312", name: "异烟肼片" },
+                { code: "040313", name: "吡嗪酰胺片" }, { code: "040314", name: "盐酸莫西沙星片" }, { code: "040315", name: "阿昔洛韦片" }
+            ],
+            "第四层": [
+                { code: "040401", name: "熊去氧胆酸片" }, { code: "040402", name: "比沙可啶肠溶片" }, { code: "040403", name: "硫酸镁" },
+                { code: "040404", name: "磷霉素氨丁三醇散" }, { code: "040405", name: "米曲菌胰酶片" }, { code: "040406", name: "布拉氏酵母菌散" },
+                { code: "040407", name: "大黄碳酸氢钠片" }, { code: "040408", name: "氯化钾缓释片" }, { code: "040409", name: "阿苯达唑片" },
+                { code: "040410", name: "盐酸克林霉素胶囊" }, { code: "040411", name: "枸橼酸莫沙必利片" }, { code: "040412", name: "瑞巴派特片" },
+                { code: "040413", name: "消旋卡多曲颗粒" }, { code: "040414", name: "盐酸洛哌丁胺胶囊" }, { code: "040415", name: "多潘立酮片" },
+                { code: "040416", name: "蒙脱石散" }, { code: "040417", name: "口服补液盐散III" }
+            ]
+        }
+    };
+
+    // 构建扁平药品列表: 每个元素包含 cabinet, layer, code, name
+    function buildFlatDrugList() {
+        const flatList = [];
+        for (const [cabName, layers] of Object.entries(RAW_CABINETS)) {
+            for (const [layerName, drugs] of Object.entries(layers)) {
+                for (const drug of drugs) {
+                    flatList.push({
+                        cabinet: cabName,
+                        layer: layerName,
+                        code: drug.code,
+                        name: drug.name
+                    });
+                }
+            }
+        }
+        return flatList;
+    }
+
+    let allDrugs = buildFlatDrugList();   // 原始数据常量 (只读)
+    let currentFiltered = [...allDrugs];   // 当前筛选结果
+
+    // DOM 元素
+    const cabFilter = document.getElementById('cabFilterSelect');
+    const layerFilter = document.getElementById('layerFilterSelect');
+    const searchInput = document.getElementById('searchInput');
+    const resetBtn = document.getElementById('resetFilterBtn');
+    const tableBody = document.getElementById('tableBody');
+    const resultCountSpan = document.getElementById('resultCount');
+
+    // 辅助: 模糊匹配 (不区分大小写)
+    function matchesSearch(drug, keyword) {
+        if (!keyword.trim()) return true;
+        const kw = keyword.trim().toLowerCase();
+        return drug.code.toLowerCase().includes(kw) || drug.name.toLowerCase().includes(kw);
+    }
+
+    // 筛选核心逻辑
+    function applyFilters() {
+        const selectedCab = cabFilter.value;     // "all" 或 "3号药柜" 或 "4号药柜"
+        const selectedLayer = layerFilter.value; // "all" 或 具体层
+        const searchKeyword = searchInput.value;
+
+        let filtered = allDrugs.filter(drug => {
+            // 药柜筛选
+            if (selectedCab !== 'all' && drug.cabinet !== selectedCab) return false;
+            // 层级筛选
+            if (selectedLayer !== 'all' && drug.layer !== selectedLayer) return false;
+            // 搜索模糊匹配
+            if (!matchesSearch(drug, searchKeyword)) return false;
+            return true;
+        });
+
+        currentFiltered = filtered;
+        renderTable();
+        updateResultCount();
+    }
+
+    // 渲染表格
+    function renderTable() {
+        if (!tableBody) return;
+        if (currentFiltered.length === 0) {
+            tableBody.innerHTML = `<tr class="empty-row"><td colspan="4">📭 没有找到符合筛选条件的药品</td></tr>`;
+            return;
+        }
+
+        let html = '';
+        for (const drug of currentFiltered) {
+            html += `
+                <tr>
+                    <td><span class="cab-badge">${escapeHtml(drug.cabinet)}</span></td>
+                    <td><span class="layer-badge">${escapeHtml(drug.layer)}</span></td>
+                    <td class="code-cell">${escapeHtml(drug.code)}</td>
+                    <td><strong>${escapeHtml(drug.name)}</strong></td>
+                </tr>
+            `;
+        }
+        tableBody.innerHTML = html;
+    }
+
+    // 更新统计数量
+    function updateResultCount() {
+        const total = currentFiltered.length;
+        resultCountSpan.innerText = `共 ${total} 条记录`;
+    }
+
+    // 简单防XSS
+    function escapeHtml(str) {
+        if (!str) return '';
+        return str.replace(/[&<>]/g, function(m) {
+            if (m === '&') return '&amp;';
+            if (m === '<') return '&lt;';
+            if (m === '>') return '&gt;';
+            return m;
+        });
+    }
+
+    // 重置所有筛选器
+    function resetFilters() {
+        cabFilter.value = 'all';
+        layerFilter.value = 'all';
+        searchInput.value = '';
+        applyFilters(); // 重新筛选并渲染
+    }
+
+    // 监听变化事件
+    function bindEvents() {
+        cabFilter.addEventListener('change', applyFilters);
+        layerFilter.addEventListener('change', applyFilters);
+        searchInput.addEventListener('input', applyFilters);
+        resetBtn.addEventListener('click', resetFilters);
+    }
+
+    // 初始化页面
+    function init() {
+        bindEvents();
+        // 初次展示全部数据
+        applyFilters();
+    }
+
+    init();
+</script>
+</body>
+</html>
